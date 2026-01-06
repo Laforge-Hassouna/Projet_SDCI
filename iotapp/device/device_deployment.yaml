@@ -1,0 +1,27 @@
+# Deployment Gateway
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-device-deployment
+spec:
+  selector:
+    matchLabels:
+      app: iotapp-device-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: iotapp-device-deployment
+    spec:
+      containers:
+      - name: iotapp-device-container
+        image: 10.0.0.89:5000/iotapp-node-image:latest
+        imagePullPolicy: Always
+        env:
+        - name: SERVICE
+          value: "device/device.js"
+        - name: ARGS
+          value: "--local_ip 0.0.0.0 --local_port 9001 --local_name dev1 --remote_ip iotapp-gwf1 --remote_port 8282 --remote_name gwf1 --send_period 3000"
+        ports:
+        - containerPort: 9001
+        - containerPort: 8282

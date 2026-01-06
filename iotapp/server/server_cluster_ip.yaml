@@ -1,0 +1,14 @@
+# Service ClusterIP for Gateway
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-clusterip
+spec:
+  selector:
+    app: iotapp-server
+  ports:
+  - protocol: TCP
+    name: local-port  
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP

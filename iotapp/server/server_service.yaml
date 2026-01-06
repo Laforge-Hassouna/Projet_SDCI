@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-server
+spec:
+  selector:
+    app: iotapp-server
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
