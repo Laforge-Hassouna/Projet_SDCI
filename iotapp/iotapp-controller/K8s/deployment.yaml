@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iotapp-controller
+  template:
+    metadata:
+      labels:
+        app: iotapp-controller
+    spec:
+      containers:
+      - name: controller
+        image: iotapp-controller:latest
+        imagePullPolicy: IfNotPresent

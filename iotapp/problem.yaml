@@ -29,8 +29,8 @@ spec:
     spec:
       containers:
       - name: iotapp-shouting-device1-container
-        image: 10.0.0.89:5000/iotapp-node-image:latest
-        imagePullPolicy: Always
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: SERVICE
           value: "device/device.js"
@@ -69,8 +69,8 @@ spec:
     spec:
       containers:
       - name: iotapp-shouting-device2-container
-        image: 10.0.0.89:5000/iotapp-node-image:latest
-        imagePullPolicy: Always
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: SERVICE
           value: "device/device.js"
@@ -109,8 +109,8 @@ spec:
     spec:
       containers:
       - name: iotapp-shouting-device3-container
-        image: 10.0.0.89:5000/iotapp-node-image:latest
-        imagePullPolicy: Always
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: SERVICE
           value: "device/device.js"

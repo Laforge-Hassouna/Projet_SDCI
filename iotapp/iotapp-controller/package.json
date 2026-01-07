@@ -1,0 +1,8 @@
+{
+  "name": "iotapp-controller",
+  "version": "1.0.0",
+  "main": "controller.js",
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
