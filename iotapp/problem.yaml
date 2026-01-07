@@ -1,0 +1,29 @@
+shtdev1:
+    image: iotapp-node-image:latest
+    environment:
+      - SERVICE=device/device.js
+      - ARGS=--local_ip 0.0.0.0 --local_port 9002 --local_name shtdev1 --remote_ip gwf1 --remote_port 8282 --remote_name gwf1 --send_period 1
+    ports:
+      - "9002:9002"
+    depends_on:
+      - gwf1
+      
+shtdev2:
+    image: iotapp-node-image:latest
+    environment:
+      - SERVICE=device/device.js
+      - ARGS=--local_ip 0.0.0.0 --local_port 9003 --local_name shtdev2 --remote_ip gwf1 --remote_port 8282 --remote_name gwf1 --send_period 2
+    ports:
+      - "9003:9003"
+    depends_on:
+      - gwf1
+
+shtdev3:
+    image: iotapp-node-image:latest
+    environment:
+      - SERVICE=device/device.js
+      - ARGS=--local_ip 0.0.0.0 --local_port 9004 --local_name shtdev3 --remote_ip gwf1 --remote_port 8282 --remote_name gwf1 --send_period 3
+    ports:
+      - "9004:9004"
+    depends_on:
+      - gwf1
