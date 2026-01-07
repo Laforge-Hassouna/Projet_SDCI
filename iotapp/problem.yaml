@@ -1,29 +1,120 @@
-shtdev1:
-    image: iotapp-node-image:latest
-    environment:
-      - SERVICE=device/device.js
-      - ARGS=--local_ip 0.0.0.0 --local_port 9002 --local_name shtdev1 --remote_ip gwf1 --remote_port 8282 --remote_name gwf1 --send_period 1
-    ports:
-      - "9002:9002"
-    depends_on:
-      - gwf1
-      
-shtdev2:
-    image: iotapp-node-image:latest
-    environment:
-      - SERVICE=device/device.js
-      - ARGS=--local_ip 0.0.0.0 --local_port 9003 --local_name shtdev2 --remote_ip gwf1 --remote_port 8282 --remote_name gwf1 --send_period 2
-    ports:
-      - "9003:9003"
-    depends_on:
-      - gwf1
-
-shtdev3:
-    image: iotapp-node-image:latest
-    environment:
-      - SERVICE=device/device.js
-      - ARGS=--local_ip 0.0.0.0 --local_port 9004 --local_name shtdev3 --remote_ip gwf1 --remote_port 8282 --remote_name gwf1 --send_period 3
-    ports:
-      - "9004:9004"
-    depends_on:
-      - gwf1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-shouting-device1
+spec:
+  selector:
+    app: iotapp-shouting-device1
+  ports:
+    - name: local-port
+      port: 9002
+      targetPort: 9002
+      protocol: TCP
+---
+# Deployment Gateway
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-shouting-device1
+spec:
+  selector:
+    matchLabels:
+      app: iotapp-shouting-device1
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: iotapp-shounting-device1
+    spec:
+      containers:
+      - name: iotapp-shouting-device1-container
+        image: 10.0.0.89:5000/iotapp-node-image:latest
+        imagePullPolicy: Always
+        env:
+        - name: SERVICE
+          value: "device/device.js"
+        - name: ARGS
+          value: "--local_ip 0.0.0.0 --local_port 9002 --local_name shtdev1 --remote_ip iotapp-gwf1 --remote_port 8282 --remote_name gwf1 --send_period 1"
+        ports:
+        - containerPort: 9002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-shouting-device2
+spec:
+  selector:
+    app: iotapp-shouting-device2
+  ports:
+    - name: local-port
+      port: 9003
+      targetPort: 9003
+      protocol: TCP
+---
+# Deployment Gateway
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-shouting-device2
+spec:
+  selector:
+    matchLabels:
+      app: iotapp-shouting-device2
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: iotapp-shounting-device2
+    spec:
+      containers:
+      - name: iotapp-shouting-device2-container
+        image: 10.0.0.89:5000/iotapp-node-image:latest
+        imagePullPolicy: Always
+        env:
+        - name: SERVICE
+          value: "device/device.js"
+        - name: ARGS
+          value: "--local_ip 0.0.0.0 --local_port 9003 --local_name shtdev2 --remote_ip iotapp-gwf1 --remote_port 8282 --remote_name gwf1 --send_period 2"
+        ports:
+        - containerPort: 9003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-shouting-device3
+spec:
+  selector:
+    app: iotapp-shouting-device3
+  ports:
+    - name: local-port
+      port: 9004
+      targetPort: 9004
+      protocol: TCP
+---
+# Deployment Gateway
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-shouting-device3
+spec:
+  selector:
+    matchLabels:
+      app: iotapp-shouting-device3
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: iotapp-shounting-device3
+    spec:
+      containers:
+      - name: iotapp-shouting-device3-container
+        image: 10.0.0.89:5000/iotapp-node-image:latest
+        imagePullPolicy: Always
+        env:
+        - name: SERVICE
+          value: "device/device.js"
+        - name: ARGS
+          value: "--local_ip 0.0.0.0 --local_port 9004 --local_name shtdev3 --remote_ip iotapp-gwf1 --remote_port 8282 --remote_name gwf1 --send_period 1"
+        ports:
+        - containerPort: 9004
