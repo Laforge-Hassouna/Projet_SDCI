@@ -1,18 +1,13 @@
-# Service ClusterIP for Gateway
 apiVersion: v1
 kind: Service
 metadata:
-  name: gwf1-clusterip
+  name: iotapp-gwf1
 spec:
   selector:
     app: iotapp-gwf1
+  type: ClusterIP
   ports:
-  - protocol: TCP
-    name: local-port    
+  - name: gwf1-port
+    protocol: TCP
     port: 8282
     targetPort: 8282
-  - protocol: TCP
-    name: remote-port
-    port: 8181
-    targetPort: 8181
-  type: ClusterIP

@@ -6,11 +6,7 @@ spec:
   selector:
     app: iotapp-gwf1
   ports:
-    - name: local-port
+    - name: gwf1-port
       port: 8282
       targetPort: 8282
-      protocol: TCP
-    - name: remote-port
-      port: 8181
-      targetPort: 8181
       protocol: TCP

@@ -6,11 +6,7 @@ spec:
   selector:
     app: iotapp-gwi
   ports:
-    - name: local-port
+    - name: gwi-port
       port: 8181
       targetPort: 8181
-      protocol: TCP
-    - name: remote-port
-      port: 8080
-      targetPort: 8080
       protocol: TCP

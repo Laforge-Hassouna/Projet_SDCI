@@ -6,11 +6,7 @@ spec:
   selector:
     app: iotapp-device
   ports:
-    - name: local-port
+    - name: device-port
       port: 9001
       targetPort: 9001
-      protocol: TCP
-    - name: remote-port
-      port: 8282
-      targetPort: 8282
       protocol: TCP

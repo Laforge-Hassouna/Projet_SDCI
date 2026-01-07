@@ -1,22 +1,21 @@
-# Deployment Gateway
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: iotapp-server-deployment
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: iotapp-server-deployment
-  replicas: 1
+      app: iotapp-server
   template:
     metadata:
       labels:
-        app: iotapp-server-deployment
+        app: iotapp-server
     spec:
       containers:
       - name: iotapp-server-container
-        image: 10.0.0.89:5000/iotapp-node-image:latest
-        imagePullPolicy: Always
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: SERVICE
           value: "server/server.js"

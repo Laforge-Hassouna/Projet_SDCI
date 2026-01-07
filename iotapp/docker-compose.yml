@@ -1,55 +1,38 @@
 services:
   server:
-    image: 10.0.0.89:5000/iotapp-node-image:latest
-    pull_policy: always
+    image: iotapp-node-image:latest
     environment:
       - SERVICE=server/server.js
       - ARGS=--local_ip 0.0.0.0 --local_port 8080 --local_name srv
     ports:
       - "8080:8080"
-    networks:
-      - iotapp-network
 
   gwi:
-    image: 10.0.0.89:5000/iotapp-node-image:latest
-    pull_policy: always
+    image: iotapp-node-image:latest
     environment:
       - SERVICE=gateway/gateway.js
       - ARGS=--local_ip 0.0.0.0 --local_port 8181 --local_name gwi --remote_ip server --remote_port 8080 --remote_name srv
     ports:
       - "8181:8181"
-    networks:
-      - iotapp-network
     depends_on:
       - server
 
   gwf1:
-    image: 10.0.0.89:5000/iotapp-node-image:latest
-    pull_policy: always
+    image: iotapp-node-image:latest
     environment:
       - SERVICE=gateway/gateway.js
       - ARGS=--local_ip 0.0.0.0 --local_port 8282 --local_name gwf1 --remote_ip gwi --remote_port 8181 --remote_name gwi
     ports:
       - "8282:8282"
-    networks:
-      - iotapp-network
     depends_on:
       - gwi
 
   device:
-    image: 10.0.0.89:5000/iotapp-node-image:latest
-    pull_policy: always
+    image: iotapp-node-image:latest
     environment:
       - SERVICE=device/device.js
       - ARGS=--local_ip 0.0.0.0 --local_port 9001 --local_name dev1 --remote_ip gwf1 --remote_port 8282 --remote_name gwf1 --send_period 3000
     ports:
       - "9001:9001"
-    networks:
-      - iotapp-network
     depends_on:
       - gwf1
-
-networks:
-  iotapp-network:
-    driver: bridge
-

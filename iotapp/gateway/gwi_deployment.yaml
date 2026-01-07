@@ -1,27 +1,23 @@
-# Deployment Gateway
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: iotapp-gwi-deployment
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: iotapp-gwi-deployment
-  replicas: 1
+      app: iotapp-gwi
   template:
     metadata:
       labels:
-        app: iotapp-gwi-deployment
+        app: iotapp-gwi
     spec:
       containers:
       - name: iotapp-gwi-container
-        image: 10.0.0.89:5000/iotapp-node-image:latest
-        imagePullPolicy: Always
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: SERVICE
           value: "gateway/gateway.js"
         - name: ARGS
           value: "--local_ip 0.0.0.0 --local_port 8181 --local_name gwi --remote_ip iotapp-server --remote_port 8080 --remote_name srv"
-        ports:
-        - containerPort: 8181
-        - containerPort: 8080
