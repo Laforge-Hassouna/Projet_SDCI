@@ -25,7 +25,7 @@ spec:
   template:
     metadata:
       labels:
-        app: iotapp-shounting-device1
+        app: iotapp-shouting-device1
     spec:
       containers:
       - name: iotapp-shouting-device1-container
@@ -65,7 +65,7 @@ spec:
   template:
     metadata:
       labels:
-        app: iotapp-shounting-device2
+        app: iotapp-shouting-device2
     spec:
       containers:
       - name: iotapp-shouting-device2-container
@@ -105,7 +105,7 @@ spec:
   template:
     metadata:
       labels:
-        app: iotapp-shounting-device3
+        app: iotapp-shouting-device3
     spec:
       containers:
       - name: iotapp-shouting-device3-container
