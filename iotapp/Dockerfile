@@ -1,10 +1,15 @@
 FROM node:18-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-RUN npm install express request systeminformation yargs
+# Dépendances du controller
+COPY iotapp-controller/package*.json ./iotapp-controller/
+RUN cd iotapp-controller && npm install --only=production
 
-COPY . .
+# Code + manifests
+COPY iotapp-controller ./iotapp-controller
+COPY encoder ./encoder
+COPY decoder ./decoder
 
-# All parameters are passed down using env
-CMD node ${SERVICE} ${ARGS}
+WORKDIR /app/iotapp-controller
+CMD ["node", "controller.js"]

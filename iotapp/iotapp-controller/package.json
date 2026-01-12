@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "controller.js",
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "js-yaml": "^4.1.0",
+    "@kubernetes/client-node": "^0.20.0"
   }
 }

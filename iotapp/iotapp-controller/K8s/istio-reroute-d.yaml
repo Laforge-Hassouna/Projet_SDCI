@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: gwi-to-decoder
+spec:
+  hosts:
+  - iotapp-server
+  http:
+  - match:
+    - sourceLabels:
+        app: iotapp-gwi
+    route:
+    - destination:
+        host: iotapp-decoder
+        port:
+          number: 9200

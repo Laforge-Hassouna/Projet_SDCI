@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-encoder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iotapp-encoder
+  template:
+    metadata:
+      labels:
+        app: iotapp-encoder
+    spec:
+      containers:
+      - name: encoder
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SERVICE
+          value: "encoder/encoder.js"
+        - name: ARGS
+          value: >
+            --local_ip 0.0.0.0
+            --local_port 9100
+            --local_name encoder
+            --remote_ip iotapp-gwi
+            --remote_port 8181
+            --remote_name gwi
+            --buffer_size 10
+        ports:
+        - containerPort: 9100

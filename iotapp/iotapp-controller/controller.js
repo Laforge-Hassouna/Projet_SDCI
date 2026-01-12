@@ -1,61 +1,147 @@
-const axios = require("axios");
+/*****************************************************
+ * IOTAPP CONTROLLER — AUTO-ADAPTIVE (RBAC FINAL)
+ * - Observe Prometheus
+ * - Detecte saturation
+ * - Deploy encoder / decoder
+ * - Active / désactive rerouting Istio
+ *****************************************************/
 
+const axios = require("axios");
+const fs = require("fs");
+const yaml = require("js-yaml");
+const k8s = require("@kubernetes/client-node");
+
+// ================= PROMETHEUS =================
 const PROMETHEUS_URL = "http://prometheus.istio-system:9090/api/v1/query";
 
-// -------- Seuils --------
-const CPU_THRESHOLD = 0.8;          // cores
-const RAM_THRESHOLD_MB = 800;       // MB
-const LATENCY_THRESHOLD = 200;      // ms (p95)
-const THROUGHPUT_THRESHOLD = 50;    // req/s (exemple)
+// ================= SEUILS =====================
+const CPU_THRESHOLD = 0.8;
+const RAM_THRESHOLD_MB = 800;
+const LATENCY_THRESHOLD = 200;
+const THROUGHPUT_THRESHOLD = 50;
 
+// ================= KUBERNETES CLIENT ==========
+const kc = new k8s.KubeConfig();
+kc.loadFromCluster();
+
+const appsApi = kc.makeApiClient(k8s.AppsV1Api);
+const coreApi = kc.makeApiClient(k8s.CoreV1Api);
+const customApi = kc.makeApiClient(k8s.CustomObjectsApi);
+
+// ================= PROMETHEUS QUERY ===========
 async function queryPrometheus(query) {
-  const response = await axios.get(PROMETHEUS_URL, {
-    params: { query }
-  });
-  return response.data.data.result;
+  const res = await axios.get(PROMETHEUS_URL, { params: { query } });
+  return res.data.data.result;
 }
 
+// ================= YAML APPLY =================
+async function applyYaml(path) {
+  const docs = yaml.loadAll(fs.readFileSync(path, "utf8"));
+
+  for (const doc of docs) {
+    if (!doc || !doc.kind) continue;
+
+    try {
+      if (doc.kind === "Deployment") {
+        await appsApi.createNamespacedDeployment("default", doc);
+      } else if (doc.kind === "Service") {
+        await coreApi.createNamespacedService("default", doc);
+      } else if (doc.kind === "VirtualService") {
+        await customApi.createNamespacedCustomObject(
+          "networking.istio.io",
+          "v1beta1",
+          "default",
+          "virtualservices",
+          doc
+        );
+      }
+      console.log(`✔ ${doc.kind} '${doc.metadata.name}' applied`);
+    } catch (err) {
+      if (err.response?.statusCode === 409) {
+        console.log(`ℹ ${doc.kind} '${doc.metadata.name}' already exists`);
+      } else {
+        console.error(`✖ Failed ${doc.kind}`, err.body || err);
+      }
+    }
+  }
+}
+
+// ================= ISTIO STATE =================
+async function isReroutingActive() {
+  try {
+    await customApi.getNamespacedCustomObject(
+      "networking.istio.io",
+      "v1beta1",
+      "default",
+      "virtualservices",
+      "gwf1-to-encoder"
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ================= DEPLOY MIDDLEWARE ==========
+async function enableMiddleware() {
+  console.log("⚠ ACTION: Enable middleware + rerouting");
+
+  await applyYaml("/app/encoder/encoder-deployment.yaml");
+  await applyYaml("/app/encoder/encoder-service.yaml");
+
+  await applyYaml("/app/decoder/decoder-deployment.yaml");
+  await applyYaml("/app/decoder/decoder-service.yaml");
+
+  await applyYaml("/app/iotapp-controller/k8s/istio-reroute.yaml");
+}
+
+// ================= ROLLBACK ====================
+async function disableMiddleware() {
+  console.log("ACTION: Rollback to nominal path");
+
+  const vsList = ["gwf1-to-encoder", "gwi-to-decoder"];
+
+  for (const vs of vsList) {
+    try {
+      await customApi.deleteNamespacedCustomObject(
+        "networking.istio.io",
+        "v1beta1",
+        "default",
+        "virtualservices",
+        vs
+      );
+      console.log(`✔ VirtualService '${vs}' deleted`);
+    } catch {
+      console.log(`ℹ VirtualService '${vs}' already absent`);
+    }
+  }
+}
+
+// ================= METRICS =====================
 async function collectMetrics() {
   try {
-    // CPU
-    const cpuQuery = `
-      sum(rate(container_cpu_usage_seconds_total{
-        namespace="default",
-        pod=~"iotapp-.*"
-      }[1m]))
-    `;
+    const cpu = parseFloat((await queryPrometheus(`
+      sum(rate(container_cpu_usage_seconds_total{namespace="default",pod=~"iotapp-.*"}[1m]))
+    `))[0]?.value[1] || 0);
 
-    // RAM
-    const ramQuery = `
-      sum(container_memory_working_set_bytes{
-        namespace="default",
-        pod=~"iotapp-.*"
-      }) / 1024 / 1024
-    `;
+    const ram = parseFloat((await queryPrometheus(`
+      sum(container_memory_working_set_bytes{namespace="default",pod=~"iotapp-.*"}) / 1024 / 1024
+    `))[0]?.value[1] || 0);
 
-    // Latence p95 Istio
-    const latencyQuery = `
-      histogram_quantile(
-        0.95,
+    const latency = parseFloat((await queryPrometheus(`
+      histogram_quantile(0.95,
         sum(rate(istio_request_duration_milliseconds_bucket{
           destination_service_name="iotapp-gwf1"
         }[1m])) by (le)
       )
-    `;
+    `))[0]?.value[1] || 0);
 
-    // Débit (req/s)
-    const throughputQuery = `
+    const throughput = parseFloat((await queryPrometheus(`
       sum(rate(istio_requests_total{
         destination_service_name="iotapp-gwf1"
       }[1m]))
-    `;
+    `))[0]?.value[1] || 0);
 
-    const cpu = parseFloat((await queryPrometheus(cpuQuery))[0]?.value[1] || 0);
-    const ram = parseFloat((await queryPrometheus(ramQuery))[0]?.value[1] || 0);
-    const latency = parseFloat((await queryPrometheus(latencyQuery))[0]?.value[1] || 0);
-    const throughput = parseFloat((await queryPrometheus(throughputQuery))[0]?.value[1] || 0);
-
-    // Détection saturation
     const saturated =
       cpu > CPU_THRESHOLD ||
       ram > RAM_THRESHOLD_MB ||
@@ -63,28 +149,28 @@ async function collectMetrics() {
       throughput > THROUGHPUT_THRESHOLD;
 
     console.log(" METRICS");
-    console.log(` CPU usage      : ${cpu.toFixed(4)} cores`);
-    console.log(` RAM usage      : ${ram.toFixed(2)} MB`);
-    console.log(` Latency p95    : ${latency.toFixed(2)} ms`);
-    console.log(` Throughput     : ${throughput.toFixed(2)} req/s`);
+    console.log(`CPU        : ${cpu.toFixed(3)} cores`);
+    console.log(`RAM        : ${ram.toFixed(1)} MB`);
+    console.log(`Latency    : ${latency.toFixed(1)} ms`);
+    console.log(`Throughput : ${throughput.toFixed(1)} req/s`);
 
-    if (saturated) {
-      console.log(" STATE: SATURATED");
-      if (cpu > CPU_THRESHOLD) console.log("   ↳ Reason: CPU overload");
-      if (ram > RAM_THRESHOLD_MB) console.log("   ↳ Reason: RAM pressure");
-      if (latency > LATENCY_THRESHOLD) console.log("   ↳ Reason: High latency");
-      if (throughput > THROUGHPUT_THRESHOLD) console.log("   ↳ Reason: High throughput");
-    } else {
-      console.log(" STATE: NORMAL");
+    const rerouting = await isReroutingActive();
+
+    if (saturated && !rerouting) {
+      await enableMiddleware();
     }
 
-    console.log("--------------------------------------------------");
+    if (!saturated && rerouting) {
+      await disableMiddleware();
+    }
+
+    console.log("---------------------------------------------");
 
   } catch (err) {
-    console.error(" Error collecting metrics:", err.message);
+    console.error(" Metrics error:", err.message);
   }
 }
 
-console.log("iotapp-controller started (full metrics + detection)");
-
+// ================= START ======================
+console.log("iotapp-controller started (FINAL)");
 setInterval(collectMetrics, 10000);

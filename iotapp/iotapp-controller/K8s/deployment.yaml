@@ -12,6 +12,7 @@ spec:
       labels:
         app: iotapp-controller
     spec:
+      serviceAccountName: iotapp-controller-sa 
       containers:
       - name: controller
         image: iotapp-controller:latest
