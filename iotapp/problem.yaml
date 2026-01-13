@@ -12,7 +12,6 @@ spec:
       targetPort: 9002
       protocol: TCP
 ---
-# Deployment Gateway
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,7 +51,6 @@ spec:
       targetPort: 9003
       protocol: TCP
 ---
-# Deployment Gateway
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -92,7 +90,6 @@ spec:
       targetPort: 9004
       protocol: TCP
 ---
-# Deployment Gateway
 apiVersion: apps/v1
 kind: Deployment
 metadata:
