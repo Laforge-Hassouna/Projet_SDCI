@@ -21,3 +21,5 @@ spec:
           value: "gateway/gateway.js"
         - name: ARGS
           value: "--local_ip 0.0.0.0 --local_port 8181 --local_name gwi --remote_ip iotapp-server --remote_port 8080 --remote_name srv"
+        ports:
+        - containerPort: 8181
