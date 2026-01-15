@@ -4,7 +4,7 @@ metadata:
   name: gwf1-to-encoder
 spec:
   hosts:
-  - iotapp-gwi
+  - iotapp-gwf1
   http:
   - match:
     - sourceLabels:
@@ -14,3 +14,4 @@ spec:
         host: iotapp-encoder
         port:
           number: 9100
+

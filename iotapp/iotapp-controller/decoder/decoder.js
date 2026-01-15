@@ -1,9 +1,11 @@
 var express = require('express');
 var app = express();
-app.use(express.json()); // for parsing application/json
+app.use(express.json());
 
 var request = require('request');
 var argv = require('yargs').argv;
+const si = require('systeminformation');
+
 // --local_ip
 // --local_port
 // --local_name
@@ -16,7 +18,6 @@ var REMOTE_ENDPOINT = { IP: argv.remote_ip, PORT: argv.remote_port, NAME: argv.r
 
 const E_OK = 200;
 const E_CREATED = 201;
-const E_FORBIDDEN = 403;
 const E_NOT_FOUND = 404;
 const E_ALREADY_EXIST = 500;
 
@@ -24,131 +25,92 @@ var db = {
     gateways: new Map()
 };
 
-// Function to send a single packet to the remote endpoint
+// ------------------ HTTP UTILS ------------------
+
+function doPOST(uri, body, onResponse) {
+    request({ method: 'POST', uri: uri, json: body }, onResponse);
+}
+
+// ------------------ CORE LOGIC ------------------
+
 function sendPacket(device, packet) {
     doPOST(
-        'http://' + REMOTE_ENDPOINT.IP + ':' + REMOTE_ENDPOINT.PORT + '/device/' + device + '/data',
+        `http://${REMOTE_ENDPOINT.IP}:${REMOTE_ENDPOINT.PORT}/device/${device}/data`,
         packet,
         function (error, response, respBody) {
             if (error) {
-                console.error('Failed to send packet for device ' + device + ':', error);
-            } else {
-                console.log('Packet for device ' + device + ' sent successfully:', respBody);
+                console.error(`Failed to send packet for ${device}`, error);
+            } else if (respBody !== undefined) {
+                console.log(respBody);
             }
         }
     );
 }
 
-// Function to perform a POST request
-function doPOST(uri, body, onResponse) {
-    request({ method: 'POST', uri: uri, json: body }, onResponse);
-}
-
-// Function to register the gateway
-function register() {
-    doPOST(
-        'http://' + REMOTE_ENDPOINT.IP + ':' + REMOTE_ENDPOINT.PORT + '/gateways/register',
-        {
-            Name: LOCAL_ENDPOINT.NAME,
-            PoC: 'http://' + LOCAL_ENDPOINT.IP + ':' + LOCAL_ENDPOINT.PORT,
-        },
-        function (error, response, respBody) {
-            console.log(respBody);
-        }
-    );
-}
-
-// Function to decode a multi-value packet and send each value as a separate packet
 function decodeAndSend(device, bufferedData) {
-    if (bufferedData && bufferedData.data && Array.isArray(bufferedData.data)) {
-        bufferedData.data.forEach(packet => {
-            sendPacket(device, packet);
-        });
-    } else {
-        console.error('Invalid buffered data format for device ' + device);
+    if (!Array.isArray(bufferedData?.data)) {
+        console.error(`Invalid buffered data for device ${device}`);
+        return;
     }
+
+    bufferedData.data.forEach((packet, index) => {
+        setTimeout(() => {
+            sendPacket(device, packet);
+        }, index * 50); // 50 ms entre paquets
+    });
 }
 
-// Endpoint to receive buffered data and decode it
+
+// ------------------ API ------------------
+
 app.post('/device/:dev/buffered-data', function (req, res) {
-    var dev = req.params.dev;
-    console.log('Received buffered data for device ' + dev + ':', req.body);
-
-    // Decode and send each packet separately
+    const dev = req.params.dev;
     decodeAndSend(dev, req.body);
-
     res.sendStatus(E_OK);
 });
 
-// Existing endpoints
 app.post('/gateways/register', function (req, res) {
-    console.log(req.body);
-    var result = addNewGateway(req.body);
-    if (result === 0)
+    if (!db.gateways.get(req.body.Name)) {
+        db.gateways.set(req.body.Name, req.body);
         res.sendStatus(E_CREATED);
-    else
+    } else {
         res.sendStatus(E_ALREADY_EXIST);
+    }
 });
 
 app.post('/devices/register', function (req, res) {
-    console.log(req.body);
     doPOST(
-        'http://' + REMOTE_ENDPOINT.IP + ':' + REMOTE_ENDPOINT.PORT + '/devices/register',
+        `http://${REMOTE_ENDPOINT.IP}:${REMOTE_ENDPOINT.PORT}/devices/register`,
         req.body,
-        function (error, response, respBody) {
-            console.log(respBody);
-            res.sendStatus(E_OK);
-        }
+        () => res.sendStatus(E_OK)
     );
 });
 
-app.get('/gateways', function (req, res) {
-    console.log(req.body);
-    let resObj = [];
-    db.gateways.forEach((v, k) => {
-        resObj.push(v);
-    });
-    res.send(resObj);
-});
-
-app.get('/gateway/:gw', function (req, res) {
-    console.log(req.body);
-    var gw = req.params.gw;
-    var gateway = db.gateways.get(gw);
-    if (gateway)
-        res.status(E_OK).send(JSON.stringify(gateway));
-    else
-        res.sendStatus(E_NOT_FOUND);
-});
-
 app.get('/ping', function (req, res) {
-    console.log(req.body);
-    res.status(E_OK).send({ pong: Date.now() });
+    res.status(E_OK).json({ pong: Date.now() });
 });
 
-app.get('/health', function (req, res) {
-    console.log(req.body);
-    si.currentLoad((d) => {
-        console.log(d);
-        res.status(E_OK).send(JSON.stringify(d));
-    });
-});
-
-function addNewGateway(gw) {
-    var res = -1;
-    if (!db.gateways.get(gw.Name)) {
-        db.gateways.set(gw.Name, gw);
-        res = 0;
+app.get('/health', async function (req, res) {
+    try {
+        const load = await si.currentLoad();
+        res.status(E_OK).json(load);
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(500);
     }
-    return res;
-}
+});
 
-function removeGateway(gw) {
-    if (db.gateways.get(gw.Name))
-        db.gateways.delete(gw.Name);
-}
+// ------------------ START ------------------
 
-register();
+doPOST(
+    `http://${REMOTE_ENDPOINT.IP}:${REMOTE_ENDPOINT.PORT}/gateways/register`,
+    {
+        Name: LOCAL_ENDPOINT.NAME,
+        PoC: `http://${LOCAL_ENDPOINT.IP}:${LOCAL_ENDPOINT.PORT}`,
+    },
+    () => {}
+);
+
 app.listen(LOCAL_ENDPOINT.PORT, function () {
-    console.log(LOCAL_ENDPOINT.NAME + ' listening on: ' + LOCAL_ENDPOINT.PORT);
+    console.log(`${LOCAL_ENDPOINT.NAME} listening on: ${LOCAL_ENDPOINT.PORT}`);
 });

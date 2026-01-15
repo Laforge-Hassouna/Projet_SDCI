@@ -12,14 +12,19 @@ spec:
       labels:
         app: iotapp-decoder
     spec:
+      serviceAccountName: iotapp-controller-sa
       containers:
       - name: decoder
-        image: iotapp-node-image:latest
+        image: iotapp-controller:latest
         imagePullPolicy: IfNotPresent
+
+        command: ["node", "runner.js"]
+
         env:
         - name: SERVICE
           value: "decoder/decoder.js"
         - name: ARGS
           value: "--local_ip 0.0.0.0 --local_port 9200 --local_name decoder --remote_ip iotapp-server --remote_port 8181 --remote_name iotapp-server"
+
         ports:
         - containerPort: 9200

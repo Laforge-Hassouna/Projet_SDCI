@@ -5,6 +5,10 @@
  * - Deploy encoder / decoder
  * - Active / désactive rerouting Istio
  *****************************************************/
+if (process.env.SERVICE) {
+  console.error("controller.js must not be used as a service runner");
+  process.exit(1);
+}
 
 const axios = require("axios");
 const fs = require("fs");
@@ -92,7 +96,7 @@ async function enableMiddleware() {
   await applyYaml("/app/decoder/decoder-deployment.yaml");
   await applyYaml("/app/decoder/decoder-service.yaml");
 
-  await applyYaml("/app/iotapp-controller/k8s/istio-reroute.yaml");
+  await applyYaml("/app/K8s/istio-reroute.yaml");
 }
 
 // ================= ROLLBACK ====================
@@ -142,17 +146,32 @@ async function collectMetrics() {
       }[1m]))
     `))[0]?.value[1] || 0);
 
-    const saturated =
-      cpu > CPU_THRESHOLD ||
-      ram > RAM_THRESHOLD_MB ||
-      latency > LATENCY_THRESHOLD ||
-      throughput > THROUGHPUT_THRESHOLD;
-
+    console.log("--------------------------------------------------");
     console.log(" METRICS");
-    console.log(`CPU        : ${cpu.toFixed(3)} cores`);
-    console.log(`RAM        : ${ram.toFixed(1)} MB`);
-    console.log(`Latency    : ${latency.toFixed(1)} ms`);
-    console.log(`Throughput : ${throughput.toFixed(1)} req/s`);
+
+    console.log(` CPU usage      : ${cpu.toFixed(4)} cores`);
+    console.log(` RAM usage      : ${ram.toFixed(2)} MB`);
+    console.log(` Latency p95    : ${latency.toFixed(2)} ms`);
+    console.log(` Throughput     : ${throughput.toFixed(2)} req/s`);
+
+    let reasons = [];
+    if (cpu > CPU_THRESHOLD) reasons.push("CPU overload");
+    if (ram > RAM_THRESHOLD_MB) reasons.push("RAM pressure");
+    if (latency > LATENCY_THRESHOLD) reasons.push("High latency");
+    if (throughput > THROUGHPUT_THRESHOLD) reasons.push("High throughput");
+
+    const saturated = reasons.length > 0;
+
+    if (saturated) {
+      console.log(" STATE: SATURATED");
+      reasons.forEach(r => console.log(`   ↳ Reason: ${r}`));
+    } else {
+      console.log(" STATE: NOMINAL");
+    }
+
+
+    console.log("--------------------------------------------------");
+
 
     const rerouting = await isReroutingActive();
 

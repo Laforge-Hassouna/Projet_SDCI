@@ -12,10 +12,15 @@ spec:
       labels:
         app: iotapp-encoder
     spec:
+      serviceAccountName: iotapp-controller-sa
       containers:
       - name: encoder
-        image: iotapp-node-image:latest
+        image: iotapp-controller:latest
         imagePullPolicy: IfNotPresent
+
+        
+        command: ["node", "runner.js"]
+
         env:
         - name: SERVICE
           value: "encoder/encoder.js"
@@ -28,5 +33,6 @@ spec:
             --remote_port 8181
             --remote_name gwi
             --buffer_size 10
+
         ports:
         - containerPort: 9100

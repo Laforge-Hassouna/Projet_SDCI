@@ -61,23 +61,26 @@ function register() {
 
 // Function to flush the buffer for a specific device and send data
 function flushBuffer(device) {
-    if (db.buffers.has(device) && db.buffers.get(device).length > 0) {
-        var bufferData = db.buffers.get(device);
-        db.buffers.set(device, []); // Clear the buffer for the device
+    if (!db.buffers.has(device) || db.buffers.get(device).length === 0) {
+        return;
+    }
 
+    const bufferData = db.buffers.get(device);
+    db.buffers.set(device, []);
+
+    return new Promise((resolve, reject) => {
         doPOST(
-            'http://' + REMOTE_ENDPOINT.IP + ':' + REMOTE_ENDPOINT.PORT + '/device/' + device + '/buffered-data',
+            'http://' + REMOTE_ENDPOINT.IP + ':' + REMOTE_ENDPOINT.PORT +
+            '/device/' + device + '/buffered-data',
             { data: bufferData },
             function (error, response, respBody) {
-                if (error) {
-                    console.error('Failed to send buffered data for device ' + device + ':', error);
-                } else {
-                    console.log('Buffered data for device ' + device + ' sent successfully:', respBody);
-                }
+                if (error) reject(error);
+                else resolve(respBody);
             }
         );
-    }
+    });
 }
+
 
 // Function to add data to the buffer for a specific device and check if it needs to be flushed
 function addToBuffer(device, data) {
@@ -115,17 +118,21 @@ app.post('/devices/register', function (req, res) {
 });
 
 app.post('/device/:dev/data', function (req, res) {
-    console.log(req.body);
-    var dev = req.params.dev;
+    const dev = req.params.dev;
 
-    // Add data to the buffer for the specific device
+    if (!req.body) {
+        return res.status(400).send("Invalid payload");
+    }
+
     addToBuffer(dev, {
         data: req.body,
         timestamp: Date.now()
     });
 
-    res.sendStatus(E_OK);
+    return res.sendStatus(E_OK);
 });
+
+
 
 app.get('/gateways', function (req, res) {
     console.log(req.body);
@@ -151,13 +158,16 @@ app.get('/ping', function (req, res) {
     res.status(E_OK).send({ pong: Date.now() });
 });
 
-app.get('/health', function (req, res) {
-    console.log(req.body);
-    si.currentLoad((d) => {
-        console.log(d);
-        res.status(E_OK).send(JSON.stringify(d));
-    })
+app.get('/health', async function (req, res) {
+    try {
+        const data = await si.currentLoad();
+        res.status(E_OK).json(data);
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(500);
+    }
 });
+
 
 register();
 app.listen(LOCAL_ENDPOINT.PORT, function () {

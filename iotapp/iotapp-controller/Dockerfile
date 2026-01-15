@@ -2,13 +2,11 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY iotapp-controller/package*.json ./iotapp-controller/
-RUN cd iotapp-controller && npm install --only=production
+# Dépendances
+COPY package*.json ./
+RUN npm install --only=production
 
-COPY iotapp-controller ./iotapp-controller
-COPY encoder ./encoder
-COPY decoder ./decoder
-
-WORKDIR /app/iotapp-controller
+# Code du controller + encoder/decoder
+COPY . .
 
 CMD ["node", "controller.js"]
