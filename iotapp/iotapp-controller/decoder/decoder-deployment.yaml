@@ -1,3 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-server-forward
+spec:
+  selector:
+    app: iotapp-server   # SAME pods
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,7 +37,7 @@ spec:
         - name: SERVICE
           value: "decoder/decoder.js"
         - name: ARGS
-          value: "--local_ip 0.0.0.0 --local_port 9200 --local_name decoder --remote_ip iotapp-server --remote_port 8181 --remote_name iotapp-server"
+          value: "--local_ip 0.0.0.0 --local_port 9200 --local_name decoder --remote_ip iotapp-server-forward --remote_port 8080 --remote_name iotapp-server-forward"
 
         ports:
         - containerPort: 9200

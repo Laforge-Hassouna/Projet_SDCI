@@ -176,12 +176,12 @@ async function collectMetrics() {
     const rerouting = await isReroutingActive();
 
     if (saturated && !rerouting) {
-      await enableMiddleware();
+      //await enableMiddleware();
     }
 
-    if (!saturated && rerouting) {
-      await disableMiddleware();
-    }
+    //if (!saturated && rerouting) {
+      //await disableMiddleware();
+    //}
 
     console.log("---------------------------------------------");
 

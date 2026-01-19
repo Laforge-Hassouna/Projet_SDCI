@@ -4,11 +4,10 @@ metadata:
   name: gwi-to-decoder
 spec:
   hosts:
-  - iotapp-gwi
+  - iotapp-server
   http:
   - match:
-    - sourceLabels:
-        app: iotapp-gwi
+    - port: 8080
     route:
     - destination:
         host: iotapp-decoder

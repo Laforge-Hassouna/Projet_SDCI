@@ -1,3 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-gwi-forward
+spec:
+  selector:
+    app: iotapp-gwi   # SAME pods
+  ports:
+  - name: http
+    port: 8181
+    targetPort: 8181
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,10 +42,10 @@ spec:
             --local_ip 0.0.0.0
             --local_port 9100
             --local_name encoder
-            --remote_ip iotapp-gwi
+            --remote_ip iotapp-gwi-forward
             --remote_port 8181
-            --remote_name gwi
-            --buffer_size 10
+            --remote_name gwi-forward
+            --buffer_size 2
 
         ports:
         - containerPort: 9100

@@ -26,6 +26,8 @@ kubectl delete service \
   iotapp-shouting-device1 \
   iotapp-shouting-device2 \
   iotapp-shouting-device3 \
+  iotapp-gwi-forward \
+  iotapp-server-forward \
   --ignore-not-found
 
 kubectl delete virtualservice iotapp-reroute --ignore-not-found

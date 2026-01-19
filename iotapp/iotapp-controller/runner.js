@@ -10,7 +10,7 @@ const service = process.env.SERVICE;
 const args = process.env.ARGS || "";
 
 if (!service) {
-  console.error("❌ SERVICE environment variable is not defined");
+  console.error(" SERVICE environment variable is not defined");
   process.exit(1);
 }
 
@@ -29,7 +29,7 @@ process.argv = [
 try {
   require(path.join(__dirname, service));
 } catch (err) {
-  console.error(`❌ Failed to start service ${service}`);
+  console.error(` Failed to start service ${service}`);
   console.error(err);
   process.exit(1);
 }

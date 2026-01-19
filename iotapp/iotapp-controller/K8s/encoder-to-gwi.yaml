@@ -1,15 +1,15 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: gwf1-to-encoder
+  name: encoder-to-gwi
 spec:
   hosts:
-  - iotapp-gwi
+  - iotapp-encoder
   http:
   - match:
-    - port: 8181
+    - port: 9100
     route:
     - destination:
-        host: iotapp-encoder
+        host: iotapp-gwi
         port:
-          number: 9100
+          number: 8181
