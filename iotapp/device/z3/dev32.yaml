@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-dev32
+spec:
+  selector:
+    app: iotapp-dev32
+  ports:
+    - name: dev32-port
+      port: 9008
+      targetPort: 9008
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-dev32-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iotapp-dev32
+  template:
+    metadata:
+      labels:
+        app: iotapp-dev32
+    spec:
+      containers:
+      - name: iotapp-dev32-container
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SERVICE
+          value: "device/device.js"
+        - name: ARGS
+          value: "--local_ip 0.0.0.0 --local_port 9008 --local_name dev32 --remote_ip iotapp-gwf3 --remote_port 8283 --remote_name gwf3 --send_period 3000"
+        ports:
+        - containerPort: 9008

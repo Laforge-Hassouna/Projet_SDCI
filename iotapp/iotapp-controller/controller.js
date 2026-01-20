@@ -96,7 +96,8 @@ async function enableMiddleware() {
   await applyYaml("/app/decoder/decoder-deployment.yaml");
   await applyYaml("/app/decoder/decoder-service.yaml");
 
-  await applyYaml("/app/K8s/istio-reroute.yaml");
+  await applyYaml("/app/encoder/encoder-traffic-shift.yaml");
+  await applyYaml("/app/decoder/decoder-traffic-shift.yaml");
 }
 
 // ================= ROLLBACK ====================
@@ -176,7 +177,7 @@ async function collectMetrics() {
     const rerouting = await isReroutingActive();
 
     if (saturated && !rerouting) {
-      //await enableMiddleware();
+      await enableMiddleware();
     }
 
     //if (!saturated && rerouting) {

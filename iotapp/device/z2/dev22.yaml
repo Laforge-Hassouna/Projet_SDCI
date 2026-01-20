@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-dev22
+spec:
+  selector:
+    app: iotapp-dev22
+  ports:
+    - name: dev22-port
+      port: 9005
+      targetPort: 9005
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-dev22-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iotapp-dev22
+  template:
+    metadata:
+      labels:
+        app: iotapp-dev22
+    spec:
+      containers:
+      - name: iotapp-dev22-container
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SERVICE
+          value: "device/device.js"
+        - name: ARGS
+          value: "--local_ip 0.0.0.0 --local_port 9005 --local_name dev22 --remote_ip iotapp-gwf2 --remote_port 8282 --remote_name gwf2 --send_period 3000"
+        ports:
+        - containerPort: 9005

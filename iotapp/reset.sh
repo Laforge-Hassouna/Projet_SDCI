@@ -5,27 +5,43 @@ echo "🧹 Resetting iotapp (FULL CLEAN)"
 
 kubectl delete deployment \
   iotapp-controller \
-  iotapp-device-deployment \
+  iotapp-dev11-deployment \
+  iotapp-dev12-deployment \
+  iotapp-dev13-deployment \
+  iotapp-dev21-deployment \
+  iotapp-dev22-deployment \
+  iotapp-dev23-deployment \
+  iotapp-dev31-deployment \
+  iotapp-dev32-deployment \
+  iotapp-dev33-deployment \
   iotapp-gwf1-deployment \
+  iotapp-gwf2-deployment \
+  iotapp-gwf3-deployment \
   iotapp-gwi-deployment \
   iotapp-server-deployment \
   iotapp-encoder \
   iotapp-decoder \
   iotapp-shouting-device1 \
-  iotapp-shouting-device2 \
-  iotapp-shouting-device3 \
   --ignore-not-found
 
 kubectl delete service \
-  iotapp-device \
+  iotapp-dev11 \
+  iotapp-dev12 \
+  iotapp-dev13 \
+  iotapp-dev21 \
+  iotapp-dev22 \
+  iotapp-dev23 \
+  iotapp-dev31 \
+  iotapp-dev32 \
+  iotapp-dev33 \
   iotapp-gwf1 \
+  iotapp-gwf2 \
+  iotapp-gwf3 \
   iotapp-gwi \
   iotapp-server \
   iotapp-encoder \
   iotapp-decoder \
   iotapp-shouting-device1 \
-  iotapp-shouting-device2 \
-  iotapp-shouting-device3 \
   iotapp-gwi-forward \
   iotapp-server-forward \
   --ignore-not-found

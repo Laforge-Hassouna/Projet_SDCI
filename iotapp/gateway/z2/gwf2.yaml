@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-gwf2
+spec:
+  selector:
+    app: iotapp-gwf2
+  ports:
+    - name: gwf2-port
+      port: 8282
+      targetPort: 8282
+      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iotapp-gwf2-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iotapp-gwf2
+  template:
+    metadata:
+      labels:
+        app: iotapp-gwf2
+    spec:
+      containers:
+      - name: iotapp-gwf2-container
+        image: iotapp-node-image:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: SERVICE
+          value: "gateway/gateway.js"
+        - name: ARGS
+          value: "--local_ip 0.0.0.0 --local_port 8282 --local_name gwf2 --remote_ip iotapp-gwi-z2 --remote_port 8183 --remote_name gwi"
+        ports:
+        - containerPort: 8282

@@ -1,3 +1,17 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iotapp-gwf1
+spec:
+  selector:
+    app: iotapp-gwf1
+  ports:
+    - name: gwf1-port
+      port: 8281
+      targetPort: 8281
+      protocol: TCP
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,6 +34,6 @@ spec:
         - name: SERVICE
           value: "gateway/gateway.js"
         - name: ARGS
-          value: "--local_ip 0.0.0.0 --local_port 8282 --local_name gwf1 --remote_ip iotapp-gwi --remote_port 8181 --remote_name gwi"
+          value: "--local_ip 0.0.0.0 --local_port 8281 --local_name gwf1 --remote_ip iotapp-gwi-z1 --remote_port 8182 --remote_name gwi"
         ports:
-        - containerPort: 8282
+        - containerPort: 8281
