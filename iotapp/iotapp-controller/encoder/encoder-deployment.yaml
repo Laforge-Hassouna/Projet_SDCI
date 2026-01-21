@@ -45,7 +45,7 @@ spec:
             --remote_ip iotapp-gwi-forward
             --remote_port 8181
             --remote_name gwi-forward
-            --buffer_size 2
+            --buffer_size 20
 
         ports:
         - containerPort: 9100

@@ -1,7 +1,26 @@
 #!/bin/bash
 set -e
 
+BUILD_IMAGES=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --build)
+      BUILD_IMAGES=true
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;  
+  esac
+done
+
 echo "🤖 Deploying adaptive controller"
+
+if [ "$BUILD_IMAGES" = true ]; then
+  docker build -t iotapp-controller:latest ./iotapp-controller/
+fi
 
 # RBAC (OBLIGATOIRE AVANT le deployment)
 kubectl apply -f iotapp-controller/k8s/serviceaccount.yaml

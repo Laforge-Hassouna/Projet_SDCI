@@ -4,7 +4,7 @@ metadata:
   name: encoder-traffic-shift
 spec:
   hosts:
-  - iotapp-gwi-z1
+  - iotapp-gwi
   http:
   - match:
     - port: 8181

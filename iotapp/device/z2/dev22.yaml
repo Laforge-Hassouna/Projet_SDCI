@@ -34,6 +34,6 @@ spec:
         - name: SERVICE
           value: "device/device.js"
         - name: ARGS
-          value: "--local_ip 0.0.0.0 --local_port 9005 --local_name dev22 --remote_ip iotapp-gwf2 --remote_port 8282 --remote_name gwf2 --send_period 3000"
+          value: "--local_ip 0.0.0.0 --local_port 9005 --local_name dev22 --remote_ip iotapp-gwf2 --remote_port 8282 --remote_name gwf2 --send_period 6000"
         ports:
         - containerPort: 9005

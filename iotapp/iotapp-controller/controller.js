@@ -19,8 +19,8 @@ const k8s = require("@kubernetes/client-node");
 const PROMETHEUS_URL = "http://prometheus.istio-system:9090/api/v1/query";
 
 // ================= SEUILS =====================
-const CPU_THRESHOLD = 0.8;
-const RAM_THRESHOLD_MB = 800;
+const CPU_THRESHOLD = 0.4;
+const RAM_THRESHOLD_MB = 200;
 const LATENCY_THRESHOLD = 200;
 const THROUGHPUT_THRESHOLD = 50;
 
@@ -78,7 +78,7 @@ async function isReroutingActive() {
       "v1beta1",
       "default",
       "virtualservices",
-      "gwf1-to-encoder"
+      "encoder-traffic-shift"
     );
     return true;
   } catch {
@@ -104,7 +104,7 @@ async function enableMiddleware() {
 async function disableMiddleware() {
   console.log("ACTION: Rollback to nominal path");
 
-  const vsList = ["gwf1-to-encoder", "gwi-to-decoder"];
+  const vsList = ["encoder-traffic-shift", "decoder-traffic-shift"];
 
   for (const vs of vsList) {
     try {
@@ -126,24 +126,24 @@ async function disableMiddleware() {
 async function collectMetrics() {
   try {
     const cpu = parseFloat((await queryPrometheus(`
-      sum(rate(container_cpu_usage_seconds_total{namespace="default",pod=~"iotapp-.*"}[1m]))
+      sum(rate(container_cpu_usage_seconds_total{namespace="default",pod=~"iotapp-gwi.*"}[1m]))
     `))[0]?.value[1] || 0);
 
     const ram = parseFloat((await queryPrometheus(`
-      sum(container_memory_working_set_bytes{namespace="default",pod=~"iotapp-.*"}) / 1024 / 1024
+      sum(container_memory_working_set_bytes{namespace="default",pod=~"iotapp-gwi.*"}) / 1024 / 1024
     `))[0]?.value[1] || 0);
 
     const latency = parseFloat((await queryPrometheus(`
       histogram_quantile(0.95,
         sum(rate(istio_request_duration_milliseconds_bucket{
-          destination_service_name="iotapp-gwf1"
+          destination_service_name="iotapp-gwi"
         }[1m])) by (le)
       )
     `))[0]?.value[1] || 0);
 
     const throughput = parseFloat((await queryPrometheus(`
       sum(rate(istio_requests_total{
-        destination_service_name="iotapp-gwf1"
+        destination_service_name="iotapp-gwi"
       }[1m]))
     `))[0]?.value[1] || 0);
 

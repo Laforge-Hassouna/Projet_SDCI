@@ -34,6 +34,6 @@ spec:
         - name: SERVICE
           value: "gateway/gateway.js"
         - name: ARGS
-          value: "--local_ip 0.0.0.0 --local_port 8282 --local_name gwf2 --remote_ip iotapp-gwi-z2 --remote_port 8183 --remote_name gwi"
+          value: "--local_ip 0.0.0.0 --local_port 8282 --local_name gwf2 --remote_ip iotapp-gwi --remote_port 8181 --remote_name gwi"
         ports:
         - containerPort: 8282
