@@ -46,7 +46,8 @@ kubectl delete service \
   iotapp-server-forward \
   --ignore-not-found
 
-kubectl delete virtualservice iotapp-reroute --ignore-not-found
+kubectl delete virtualservice encoder-traffic-shift --ignore-not-found
+kubectl delete virtualservice decoder-traffic-shift --ignore-not-found
 
 kubectl delete rolebinding iotapp-controller-binding --ignore-not-found
 kubectl delete role iotapp-controller-role --ignore-not-found
