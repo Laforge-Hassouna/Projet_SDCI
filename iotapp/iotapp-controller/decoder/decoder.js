@@ -63,6 +63,19 @@ function decodeAndSend(device, bufferedData) {
 
 // ------------------ API ------------------
 
+app.post('/device/:dev/data', function(req, res) {
+    console.log(req.body);
+    var dev = req.params.dev;
+    doPOST(
+        'http://' + REMOTE_ENDPOINT.IP + ':' +REMOTE_ENDPOINT.PORT + '/device/' + dev + '/data',
+        req.body,
+        function(error, response, respBody) {
+            console.log(respBody);
+            res.sendStatus(E_OK);
+        }
+    )
+});
+
 app.post('/device/:dev/buffered-data', function (req, res) {
     const dev = req.params.dev;
     decodeAndSend(dev, req.body);
